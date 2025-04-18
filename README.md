@@ -46,18 +46,29 @@ Each run creates a timestamped folder like outputs/run_1713450000/ containing:
 File	Description
 
 summary.txt	        Summary of browsing data
+
 dfs_output.txt	    DFS traversal of visited domains
+
 graph.txt	          Transition graph info
+
 shortest_path.txt	  Shortest path between nodes
+
 visit_counts.csv	  Top visited domains
+
 transitions.csv	    Frequently followed links
+
 frequent_paths.csv	Common visit sequences
 
 ## How to Get Your  History File
+
 Browser | Path
+
 Chrome | C:\Users\<User>\AppData\Local\Google\Chrome\User Data\Default\History
+
 Edge | C:\Users\<User>\AppData\Local\Microsoft\Edge\User Data\Default\History
+
 Brave | C:\Users\<User>\AppData\Local\BraveSoftware\Brave-Browser\User Data\Default\History
+
 Opera | C:\Users\<User>\AppData\Roaming\Opera Software\Opera Stable\History
 
 ##Instead of uploading your actual History file directly, it's recommended to make a copy of itand then upload it 
