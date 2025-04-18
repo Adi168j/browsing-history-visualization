@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Browsing Insight Tool</title>
+  <style>
+body {
+  font-family: 'San Francisco', Arial, sans-serif;
+  background: #1c1c1c;
+  max-width: 900px;
+  margin: 40px auto;
+  padding: 30px;
+  border-radius: 15px;
+  background: #2f2f2f;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  color: #ecf0f1;
+  line-height: 1.6;
+}
+
+h1 {
+  font-size: 2.5em;
+  color: #ecf0f1;
+  text-align: center;
+  font-weight: 500;
+  letter-spacing: 1px;
+  margin-bottom: 20px;
+  white-space: nowrap;
+  overflow: hidden;
+  border-right: .15em solid #ecf0f1;
+  animation: typewriter 4s steps(40) infinite, blink 0.75s step-end infinite;
+}
+
+@keyframes typewriter {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+@keyframes blink {
+  50% { border-color: transparent; }
+}
+
+label, input, button {
+  display: block;
+  margin-top: 12px;
+  color: #ecf0f1;
+  font-weight: 300;
+  font-size: 1em;
+}
+
+button {
+  background: #3e5e74;
+  color: white;
+  padding: 12px 25px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1.1em;
+  margin-top: 15px;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transform: perspective(1px) translateZ(0);
+}
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+
+button:hover {
+  background: #2980b9;
+  transform: translateY(-5px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.output {
+  margin-top: 30px;
+  padding: 15px;
+  background: #2f2f2f;
+  border: 1px solid #7f8c8d;
+  border-radius: 10px;
+  white-space: pre-wrap;
+  font-size: 1em;
+  color: #ecf0f1;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 30px;
+}
+
+th, td {
+  border: 1px solid #7f8c8d;
+  padding: 12px;
+  text-align: left;
+  color: #ecf0f1;
+  font-weight: 400;
+}
+
+th {
+  background-color: #34495e;
+  color: #ecf0f1;
+}
+
+tr:nth-child(even) {
+  background-color: #2f2f2f;
+}
+
+.chart-container {
+  width: 100%;
+  margin-top: 40px;
+  text-align: center;
+}
+
+button, .output, th, td {
+  transition: all 0.3s ease;
+}
+
+button:hover, .output:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <h1>🌐 Browsing Insight Tool</h1>
+
+  <form id="uploadForm" action="/upload" method="POST" enctype="multipart/form-data">
+    <h2>Upload Chrome History File</h2>
+    <label for="file">Choose Chrome History SQLite file:</label>
+    <input type="file" id="file" name="file" accept=".sqlite,.db">
+    <input type="hidden" id="actionInput" name="action" value="">
+    
+    <div class="button-row">
+      <button type="submit" onclick="setAction('summary')">Summary</button>
+      <button type="submit" onclick="setAction('dfs')">Depth-First Search</button>
+      <button type="submit" onclick="setAction('graph')">Transition Graph</button>
+      <button type="submit" onclick="setAction('hops')">Shortest Path</button>
+      <button type="submit" onclick="setAction('transitions')">Frequent Transitions</button>
+    </div>
+  </form>
+
+  <script>
+    function setAction(actionName) {
+      document.getElementById('actionInput').value = actionName;
+    }
+  </script>
+
+{% if output and action in ['header', 'summary', 'dfs', 'graph', 'hops'] %}
+    <div class="output">
+      <h3>{{ action | capitalize }} Output:</h3>
+      <pre>{{ output }}</pre>
+    </div>
+  {% endif %}
+
+  {% if visit_data and action == 'visits' %}
+    <div class="chart-container">
+      <h3>Top 10 Most Visited Sites</h3>
+      <canvas id="visitChart"></canvas>
+      <script>
+        const visitData = {{ visit_data | tojson }};
+        const labels = visitData.map(item => item.domain);
+        const counts = visitData.map(item => item.count);
+
+        const visitChartCtx = document.getElementById('visitChart').getContext('2d');
+        new Chart(visitChartCtx, {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: 'Visit Count',
+              data: counts,
+              backgroundColor: '#3498db',
+              borderColor: '#2980b9',
+              borderWidth: 1
+            }]
+          },
+          options: {
+            scales: {
+              y: { beginAtZero: true }
+            }
+          }
+        });
+      </script>
+      <table>
+        <thead>
+          <tr>
+            <th>Domain</th>
+            <th>Visit Count</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in visit_data %}
+          <tr>
+            <td>{{ item.domain }}</td>
+            <td>{{ item.count }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endif %}
+
+  {% if transitions_data and action == 'transitions' %}
+    <div class="chart-container">
+      <h3>Top 10 Most Frequent Transitions</h3>
+      <canvas id="transitionsChart"></canvas>
+      <script>
+        const transitionsData = {{ transitions_data | tojson }};
+        const transitionLabels = transitionsData.map(item => `${item.from} → ${item.to}`);
+        const transitionCounts = transitionsData.map(item => item.count);
+
+        const transitionsChartCtx = document.getElementById('transitionsChart').getContext('2d');
+        new Chart(transitionsChartCtx, {
+          type: 'bar',
+          data: {
+            labels: transitionLabels,
+            datasets: [{
+              label: 'Transition Count',
+              data: transitionCounts,
+              backgroundColor: '#2ecc71',
+              borderColor: '#27ae60',
+              borderWidth: 1
+            }]
+          },
+          options: {
+            scales: {
+              y: { beginAtZero: true }
+            }
+          }
+        });
+      </script>
+      <table>
+        <thead>
+          <tr>
+            <th>From</th>
+            <th>To</th>
+            <th>Count</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in transitions_data %}
+          <tr>
+            <td>{{ item.from }}</td>
+            <td>{{ item.to }}</td>
+            <td>{{ item.count }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endif %}
+  {% if path_data %}
+  <h2>Top 10 Frequent Paths</h2>
+  <table>
+    <tr><th>Path</th><th>Count</th></tr>
+    {% for row in path_data %}
+      <tr>
+        <td>{{ row['path'] }}</td>
+        <td>{{ row['count'] }}</td>
+      </tr>
+    {% endfor %}
+  </table>
+{% endif %}
+
+
+
+
+  {% if output and action not in ['header', 'summary', 'dfs', 'graph', 'hops', 'visits', 'transitions'] %}
+    <div class="output">
+      <h3>Unknown action or error:</h3>
+      <pre>{{ output }}</pre>
+    </div>
+  {% endif %}
+</body>
+</html>
