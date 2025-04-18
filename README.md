@@ -43,7 +43,7 @@ analyzer on Linux/macOS
 Each run creates a timestamped folder like outputs/run_1713450000/ containing:
 
 
-File	Description
+## File	Description
 
 summary.txt	        Summary of browsing data
 
@@ -73,7 +73,7 @@ Opera | C:\Users\<User>\AppData\Roaming\Opera Software\Opera Stable\History
 
 ##Instead of uploading your actual History file directly, it's recommended to make a copy of itand then upload it 
 
-##Temporary files are stored under:
+## Temporary files are stored under:
 uploads/ — for uploaded .sqlite files and converted .csv
 outputs/ — for C++ analysis results
 
